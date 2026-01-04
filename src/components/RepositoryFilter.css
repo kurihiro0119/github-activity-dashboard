@@ -1,0 +1,164 @@
+.repository-filter {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+}
+
+.repository-filter label {
+  font-weight: 500;
+  color: #555;
+}
+
+.repo-filter-container {
+  position: relative;
+  min-width: 250px;
+}
+
+.repo-filter-header {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.repo-search-input {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.repo-search-input:hover {
+  border-color: #667eea;
+}
+
+.repo-search-input:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.toggle-btn {
+  padding: 0.5rem 0.75rem;
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.toggle-btn:hover {
+  background: #e0e0e0;
+}
+
+.repo-list-container {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 0.25rem;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  max-height: 300px;
+  display: flex;
+  flex-direction: column;
+}
+
+.repo-list-header {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-bottom: 1px solid #eee;
+}
+
+.select-all-btn,
+.clear-btn {
+  padding: 0.4rem 0.75rem;
+  background: #f5f5f5;
+  color: #666;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.select-all-btn:hover,
+.clear-btn:hover {
+  background: #e0e0e0;
+}
+
+.repo-list {
+  overflow-y: auto;
+  max-height: 250px;
+  padding: 0.25rem;
+}
+
+.repo-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  cursor: pointer;
+  border-radius: 4px;
+  user-select: none;
+}
+
+.repo-checkbox-label:hover {
+  background: #f5f5f5;
+}
+
+.repo-checkbox {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+}
+
+.repo-name {
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.no-repos {
+  padding: 1rem;
+  text-align: center;
+  color: #999;
+  font-size: 0.9rem;
+}
+
+.selected-repos {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.selected-count {
+  font-size: 0.85rem;
+  color: #667eea;
+  font-weight: 500;
+}
+
+.selected-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.selected-tag {
+  padding: 0.25rem 0.5rem;
+  background: #667eea;
+  color: white;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+
+.selected-tag.more {
+  background: #999;
+}
+

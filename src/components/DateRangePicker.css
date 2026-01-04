@@ -1,0 +1,33 @@
+.date-range-picker {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.date-range-picker label {
+  font-weight: 500;
+  color: #555;
+}
+
+.date-input {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.date-input:hover {
+  border-color: #667eea;
+}
+
+.date-input:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.date-separator {
+  color: #666;
+  font-weight: 500;
+}
+

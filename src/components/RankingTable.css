@@ -1,0 +1,94 @@
+.ranking-table-container {
+  overflow-x: auto;
+}
+
+.ranking-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.ranking-table thead {
+  background: #f8f9fa;
+}
+
+.ranking-table th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #555;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.ranking-table td {
+  padding: 1rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.ranking-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.rank-cell {
+  text-align: center;
+  width: 60px;
+}
+
+.rank-badge {
+  display: inline-block;
+  width: 32px;
+  height: 32px;
+  line-height: 32px;
+  text-align: center;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.rank-1 {
+  background: #ffd700;
+  color: #333;
+}
+
+.rank-2 {
+  background: #c0c0c0;
+  color: #333;
+}
+
+.rank-3 {
+  background: #cd7f32;
+  color: white;
+}
+
+.rank-badge:not(.rank-1):not(.rank-2):not(.rank-3) {
+  background: #e0e0e0;
+  color: #666;
+}
+
+.name-cell {
+  font-weight: 500;
+}
+
+.primary-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #667eea;
+}
+
+.no-data {
+  text-align: center;
+  padding: 2rem;
+  color: #999;
+}
+
+@media (max-width: 768px) {
+  .ranking-table {
+    font-size: 0.8rem;
+  }
+
+  .ranking-table th,
+  .ranking-table td {
+    padding: 0.5rem;
+  }
+}
+

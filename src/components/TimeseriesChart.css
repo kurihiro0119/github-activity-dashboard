@@ -1,0 +1,10 @@
+.timeseries-chart {
+  width: 100%;
+}
+
+.no-data {
+  text-align: center;
+  padding: 2rem;
+  color: #999;
+}
+
