@@ -10,6 +10,10 @@ GitHub Organization のアクティビティを可視化するダッシュボー
 - リポジトリランキング
 - 期間指定によるデータフィルタリング
 
+<img width="1405" height="867" alt="image" src="https://github.com/user-attachments/assets/dbd5519b-912d-4d4f-916f-7382879321ec" />
+<img width="544" height="457" alt="image" src="https://github.com/user-attachments/assets/87bde9ac-51ea-433d-9bc0-e1baab046e42" />
+
+
 ## セットアップ
 
 ```bash
