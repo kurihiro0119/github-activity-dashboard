@@ -1,4 +1,7 @@
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Dashboard from './components/Dashboard'
+import Comparison from './components/Comparison'
+import Sidebar from './components/Sidebar'
 import './App.css'
 
 function App() {
@@ -16,13 +19,17 @@ function App() {
   }
 
   return (
-    <div className="app">
-      <header className="app-header">
-        <h1>GitHub Activity Dashboard</h1>
-        <p className="org-name">Organization: {org}</p>
-      </header>
-      <Dashboard org={org} />
-    </div>
+    <BrowserRouter>
+      <div className="app">
+        <Sidebar org={org} />
+        <div className="app-content">
+          <Routes>
+            <Route path="/" element={<Dashboard org={org} />} />
+            <Route path="/comparison" element={<Comparison org={org} />} />
+          </Routes>
+        </div>
+      </div>
+    </BrowserRouter>
   )
 }
 
