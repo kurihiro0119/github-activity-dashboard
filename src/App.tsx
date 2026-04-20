@@ -1,6 +1,10 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Dashboard from './components/Dashboard'
 import Comparison from './components/Comparison'
+import MemberActivity from './components/MemberActivity'
+import Dora from './components/Dora'
+import AIUsage from './components/AIUsage'
+import ReleaseCases from './components/ReleaseCases'
 import Sidebar from './components/Sidebar'
 import './App.css'
 
@@ -26,6 +30,10 @@ function App() {
           <Routes>
             <Route path="/" element={<Dashboard org={org} />} />
             <Route path="/comparison" element={<Comparison org={org} />} />
+            <Route path="/activity" element={<MemberActivity org={org} />} />
+            <Route path="/dora" element={<Dora org={org} />} />
+            <Route path="/ai-usage" element={<AIUsage org={org} />} />
+            <Route path="/release-cases" element={<ReleaseCases org={org} />} />
           </Routes>
         </div>
       </div>

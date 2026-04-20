@@ -30,6 +30,38 @@ function Sidebar({ org }: SidebarProps) {
             📈 期間比較
           </NavLink>
         </li>
+        <li>
+          <NavLink
+            to="/activity"
+            className={({ isActive }) => (isActive ? 'active' : '')}
+          >
+            🕘 活動履歴
+          </NavLink>
+        </li>
+        <li>
+          <NavLink
+            to="/dora"
+            className={({ isActive }) => (isActive ? 'active' : '')}
+          >
+            🎯 DORAメトリクス
+          </NavLink>
+        </li>
+        <li>
+          <NavLink
+            to="/ai-usage"
+            className={({ isActive }) => (isActive ? 'active' : '')}
+          >
+            🤖 AI活用度
+          </NavLink>
+        </li>
+        <li>
+          <NavLink
+            to="/release-cases"
+            className={({ isActive }) => (isActive ? 'active' : '')}
+          >
+            🚀 リリース案件
+          </NavLink>
+        </li>
       </ul>
     </nav>
   )

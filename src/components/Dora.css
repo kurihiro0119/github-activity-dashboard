@@ -1,0 +1,266 @@
+.dora {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.dora-header h1 {
+  font-size: 2rem;
+  color: #333;
+  margin: 0 0 1rem 0;
+}
+
+.dora-notice {
+  background: #fff4e5;
+  border-left: 4px solid #ff9800;
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  margin-bottom: 1.5rem;
+  color: #555;
+  font-size: 0.9rem;
+}
+
+.dora-filters {
+  background: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.filter-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.filter-row label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  color: #555;
+}
+
+.filter-label {
+  font-weight: 600;
+  color: #555;
+}
+
+.scope-radio {
+  padding: 0.35rem 0.75rem;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.filter-row select,
+.filter-row input[type='date'],
+.filter-row input[type='text'].env-input {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  background: white;
+}
+
+.env-input {
+  width: 140px;
+}
+
+.apply-btn {
+  padding: 0.6rem 1.8rem;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.apply-btn:hover:not(:disabled) {
+  background: #5568d3;
+}
+
+.apply-btn:disabled {
+  background: #c5cae9;
+  cursor: not-allowed;
+}
+
+.pending-hint {
+  color: #d32f2f;
+  font-size: 0.9rem;
+}
+
+.dora-error {
+  background: #fee;
+  color: #c33;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.dora-empty {
+  text-align: center;
+  padding: 3rem;
+  color: #999;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.dora-scope-info {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.scope-chip,
+.range-chip,
+.env-chip {
+  padding: 0.35rem 0.75rem;
+  border-radius: 16px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.scope-chip {
+  background: #667eea;
+  color: white;
+}
+
+.range-chip {
+  background: #eef;
+  color: #445;
+}
+
+.env-chip {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.dora-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.dora-card {
+  background: white;
+  padding: 1.25rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: #333;
+}
+
+.benchmark {
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: white;
+  letter-spacing: 0.03em;
+}
+
+.badge-elite {
+  background: #6f42c1;
+}
+
+.badge-high {
+  background: #2e7d32;
+}
+
+.badge-medium {
+  background: #ff9800;
+}
+
+.badge-low {
+  background: #d32f2f;
+}
+
+.badge-insufficient_data {
+  background: #999;
+}
+
+.primary-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #333;
+  font-variant-numeric: tabular-nums;
+}
+
+.primary-unit {
+  font-size: 0.85rem;
+  color: #666;
+  margin-top: -0.25rem;
+}
+
+.sub-values {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+  color: #555;
+}
+
+.sub-values .warn {
+  color: #d32f2f;
+  font-weight: 500;
+}
+
+.definition {
+  font-size: 0.75rem;
+  color: #888;
+  line-height: 1.4;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #eee;
+}
+
+.dora-charts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 900px) {
+  .dora-charts {
+    grid-template-columns: 1fr;
+  }
+}
+
+.chart-block {
+  background: white;
+  padding: 1.25rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.chart-block h3 {
+  margin: 0 0 0.75rem 0;
+  font-size: 1rem;
+  color: #333;
+  font-weight: 600;
+}
