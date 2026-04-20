@@ -5,23 +5,29 @@ import type {
   RankingItem,
   RankingType,
   ApiParams,
+  ActivitiesParams,
+  MemberActivitiesResponse,
+  DoraParams,
+  DoraResponse,
+  AiUsageParams,
+  AiUsageResponse,
+  ReleaseCasesParams,
+  ReleaseCasesResponse,
 } from "../types/api";
 
 const API_BASE = "/api/v1";
 
-const buildQueryString = (params: ApiParams): string => {
+const buildQueryString = (params: Record<string, any>): string => {
   const searchParams = new URLSearchParams();
 
   Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null) {
-      if (key === "repo" && Array.isArray(value)) {
-        // 複数のリポジトリを複数のrepoパラメータとして追加
-        value.forEach((repo) => searchParams.append("repo", repo));
-      } else if (key === "repo" && typeof value === "string") {
-        searchParams.append("repo", value);
-      } else {
-        searchParams.append(key, String(value));
-      }
+    if (value === undefined || value === null || value === "") return;
+    if (key === "repo" && Array.isArray(value)) {
+      value.forEach((repo) => searchParams.append("repo", repo));
+    } else if (key === "repo" && typeof value === "string") {
+      searchParams.append("repo", value);
+    } else {
+      searchParams.append(key, String(value));
     }
   });
 
@@ -35,7 +41,6 @@ export const apiClient = {
   ): Promise<ApiResponse<OrgMetrics>> {
     const query = buildQueryString(params);
     const url = `${API_BASE}/orgs/${org}/metrics${query ? `?${query}` : ""}`;
-    console.log("API Request URL:", url);
     const res = await fetch(url);
     if (!res.ok)
       throw new Error(`Failed to fetch org metrics: ${res.statusText}`);
@@ -95,7 +100,6 @@ export const apiClient = {
     const url = `${API_BASE}/orgs/${org}/repos/${repo}/metrics${
       query ? `?${query}` : ""
     }`;
-    console.log("API Request URL:", url);
     const res = await fetch(url);
     if (!res.ok)
       throw new Error(`Failed to fetch repo metrics: ${res.statusText}`);
@@ -128,6 +132,99 @@ export const apiClient = {
     const res = await fetch(url);
     if (!res.ok)
       throw new Error(`Failed to fetch detailed timeseries: ${res.statusText}`);
+    return res.json();
+  },
+
+  async getOrgDora(org: string, params: DoraParams = {}): Promise<DoraResponse> {
+    const query = buildQueryString(params);
+    const url = `${API_BASE}/orgs/${org}/dora${query ? `?${query}` : ""}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Failed to fetch DORA: ${res.statusText}`);
+    return res.json();
+  },
+
+  async getRepoDora(
+    org: string,
+    repo: string,
+    params: Omit<DoraParams, "repo"> = {}
+  ): Promise<DoraResponse> {
+    const query = buildQueryString(params);
+    const url = `${API_BASE}/orgs/${org}/repos/${encodeURIComponent(
+      repo
+    )}/dora${query ? `?${query}` : ""}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Failed to fetch repo DORA: ${res.statusText}`);
+    return res.json();
+  },
+
+  async getMemberDora(
+    org: string,
+    member: string,
+    params: DoraParams = {}
+  ): Promise<DoraResponse> {
+    const query = buildQueryString(params);
+    const url = `${API_BASE}/orgs/${org}/members/${encodeURIComponent(
+      member
+    )}/dora${query ? `?${query}` : ""}`;
+    const res = await fetch(url);
+    if (!res.ok)
+      throw new Error(`Failed to fetch member DORA: ${res.statusText}`);
+    return res.json();
+  },
+
+  async getOrgAIUsage(
+    org: string,
+    params: AiUsageParams = {}
+  ): Promise<AiUsageResponse> {
+    const query = buildQueryString(params);
+    const url = `${API_BASE}/orgs/${org}/ai-usage${query ? `?${query}` : ""}`;
+    const res = await fetch(url);
+    if (!res.ok)
+      throw new Error(`Failed to fetch AI usage: ${res.statusText}`);
+    return res.json();
+  },
+
+  async getMemberAIUsage(
+    org: string,
+    member: string,
+    params: AiUsageParams = {}
+  ): Promise<AiUsageResponse> {
+    const query = buildQueryString(params);
+    const url = `${API_BASE}/orgs/${org}/members/${encodeURIComponent(
+      member
+    )}/ai-usage${query ? `?${query}` : ""}`;
+    const res = await fetch(url);
+    if (!res.ok)
+      throw new Error(`Failed to fetch member AI usage: ${res.statusText}`);
+    return res.json();
+  },
+
+  async getReleaseCases(
+    org: string,
+    params: ReleaseCasesParams = {}
+  ): Promise<ReleaseCasesResponse> {
+    const query = buildQueryString(params);
+    const url = `${API_BASE}/orgs/${org}/release-cases${
+      query ? `?${query}` : ""
+    }`;
+    const res = await fetch(url);
+    if (!res.ok)
+      throw new Error(`Failed to fetch release cases: ${res.statusText}`);
+    return res.json();
+  },
+
+  async getMemberActivities(
+    org: string,
+    member: string,
+    params: ActivitiesParams = {}
+  ): Promise<MemberActivitiesResponse> {
+    const query = buildQueryString(params);
+    const url = `${API_BASE}/orgs/${org}/members/${encodeURIComponent(
+      member
+    )}/activities${query ? `?${query}` : ""}`;
+    const res = await fetch(url);
+    if (!res.ok)
+      throw new Error(`Failed to fetch member activities: ${res.statusText}`);
     return res.json();
   },
 
