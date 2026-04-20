@@ -1,6 +1,17 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts'
 import { apiClient } from '../api/client'
-import type { OrgMetrics, RankingItem, RankingType } from '../types/api'
+import type { OrgMetrics, TimeseriesData } from '../types/api'
+import RepositoryFilter from './RepositoryFilter'
 import './Comparison.css'
 
 interface ComparisonProps {
@@ -28,24 +39,48 @@ interface MemberComparison {
   diffPercent: ComparisonMetrics
 }
 
+type PeriodType = 'month' | 'week' | 'custom'
+
+const getDefaultStart = (monthsAgo: number): string => {
+  const d = new Date()
+  d.setMonth(d.getMonth() - monthsAgo)
+  return d.toISOString().split('T')[0]
+}
+
+const addDays = (isoDate: string, days: number): string => {
+  const d = new Date(isoDate)
+  d.setDate(d.getDate() + days - 1)
+  return d.toISOString().split('T')[0]
+}
+
 function Comparison({ org }: ComparisonProps) {
-  const [periodType, setPeriodType] = useState<'month' | 'week'>('month')
-  const [period1Start, setPeriod1Start] = useState<string>(() => {
-    const date = new Date()
-    date.setMonth(date.getMonth() - 2)
-    return date.toISOString().split('T')[0]
-  })
-  const [period2Start, setPeriod2Start] = useState<string>(() => {
-    const date = new Date()
-    date.setMonth(date.getMonth() - 1)
-    return date.toISOString().split('T')[0]
-  })
+  const [periodType, setPeriodType] = useState<PeriodType>('month')
+  const [period1Start, setPeriod1Start] = useState<string>(() => getDefaultStart(2))
+  const [period2Start, setPeriod2Start] = useState<string>(() => getDefaultStart(1))
+  const [period1End, setPeriod1End] = useState<string>(() => addDays(getDefaultStart(2), 30))
+  const [period2End, setPeriod2End] = useState<string>(() => addDays(getDefaultStart(1), 30))
   const [days, setDays] = useState<number>(30)
   const [selectedMembers, setSelectedMembers] = useState<string[]>([])
+  const [selectedRepos, setSelectedRepos] = useState<string[]>([])
+
+  // 適用済みの値（比較ボタン押下時に反映）
+  const [appliedPeriodType, setAppliedPeriodType] = useState<PeriodType>('month')
+  const [appliedPeriod1Start, setAppliedPeriod1Start] = useState<string>(() => getDefaultStart(2))
+  const [appliedPeriod2Start, setAppliedPeriod2Start] = useState<string>(() => getDefaultStart(1))
+  const [appliedPeriod1End, setAppliedPeriod1End] = useState<string>(() => addDays(getDefaultStart(2), 30))
+  const [appliedPeriod2End, setAppliedPeriod2End] = useState<string>(() => addDays(getDefaultStart(1), 30))
+  const [appliedDays, setAppliedDays] = useState<number>(30)
+  const [appliedSelectedMembers, setAppliedSelectedMembers] = useState<string[]>([])
+  const [appliedSelectedRepos, setAppliedSelectedRepos] = useState<string[]>([])
+
   const [allMembers, setAllMembers] = useState<string[]>([])
+  const [allRepos, setAllRepos] = useState<string[]>([])
   const [orgMetrics1, setOrgMetrics1] = useState<OrgMetrics | null>(null)
   const [orgMetrics2, setOrgMetrics2] = useState<OrgMetrics | null>(null)
   const [memberComparisons, setMemberComparisons] = useState<MemberComparison[]>([])
+  const [timeseries1, setTimeseries1] = useState<TimeseriesData[]>([])
+  const [timeseries2, setTimeseries2] = useState<TimeseriesData[]>([])
+  const [chartMetric, setChartMetric] = useState<keyof ComparisonMetrics>('commits')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -58,7 +93,11 @@ function Comparison({ org }: ComparisonProps) {
   }, [])
 
   // 期間タイプに応じて日数と開始日を自動設定
-  const updatePeriodsByType = useCallback((type: 'month' | 'week') => {
+  const updatePeriodsByType = useCallback((type: PeriodType) => {
+    if (type === 'custom') {
+      // 期間指定モードでは既存値を維持
+      return
+    }
     const now = new Date()
     if (type === 'month') {
       setDays(30)
@@ -83,28 +122,65 @@ function Comparison({ org }: ComparisonProps) {
     updatePeriodsByType(periodType)
   }, [periodType, updatePeriodsByType])
 
-  // 実際の期間を計算
+  // 入力中の期間プレビュー（UI表示用）
   const period1: DateRange = useMemo(() => ({
     start: period1Start,
-    end: calculateEndDate(period1Start, days),
-  }), [period1Start, days, calculateEndDate])
+    end: periodType === 'custom' ? period1End : calculateEndDate(period1Start, days),
+  }), [period1Start, period1End, days, periodType, calculateEndDate])
 
   const period2: DateRange = useMemo(() => ({
     start: period2Start,
-    end: calculateEndDate(period2Start, days),
-  }), [period2Start, days, calculateEndDate])
+    end: periodType === 'custom' ? period2End : calculateEndDate(period2Start, days),
+  }), [period2Start, period2End, days, periodType, calculateEndDate])
 
-  // メンバーリストを取得
+  // 適用済みの期間（実際の比較に使用）
+  const appliedPeriod1: DateRange = useMemo(() => ({
+    start: appliedPeriod1Start,
+    end: appliedPeriodType === 'custom' ? appliedPeriod1End : calculateEndDate(appliedPeriod1Start, appliedDays),
+  }), [appliedPeriod1Start, appliedPeriod1End, appliedDays, appliedPeriodType, calculateEndDate])
+
+  const appliedPeriod2: DateRange = useMemo(() => ({
+    start: appliedPeriod2Start,
+    end: appliedPeriodType === 'custom' ? appliedPeriod2End : calculateEndDate(appliedPeriod2Start, appliedDays),
+  }), [appliedPeriod2Start, appliedPeriod2End, appliedDays, appliedPeriodType, calculateEndDate])
+
+  // 未適用の変更があるかどうか
+  const hasPendingChanges =
+    periodType !== appliedPeriodType ||
+    period1Start !== appliedPeriod1Start ||
+    period2Start !== appliedPeriod2Start ||
+    period1End !== appliedPeriod1End ||
+    period2End !== appliedPeriod2End ||
+    days !== appliedDays ||
+    selectedMembers.length !== appliedSelectedMembers.length ||
+    selectedMembers.some((m) => !appliedSelectedMembers.includes(m)) ||
+    selectedRepos.length !== appliedSelectedRepos.length ||
+    selectedRepos.some((r) => !appliedSelectedRepos.includes(r))
+
+  const applyFilters = useCallback(() => {
+    setAppliedPeriodType(periodType)
+    setAppliedPeriod1Start(period1Start)
+    setAppliedPeriod2Start(period2Start)
+    setAppliedPeriod1End(period1End)
+    setAppliedPeriod2End(period2End)
+    setAppliedDays(days)
+    setAppliedSelectedMembers(selectedMembers)
+    setAppliedSelectedRepos(selectedRepos)
+  }, [periodType, period1Start, period2Start, period1End, period2End, days, selectedMembers, selectedRepos])
+
+  // メンバーリストを取得（適用済みの期間・リポジトリを使用）
   useEffect(() => {
     const fetchMembers = async () => {
       try {
-        // 両期間をカバーする範囲でメンバーを取得
-        const startDate = period1.start < period2.start ? period1.start : period2.start
-        const endDate = period1.end > period2.end ? period1.end : period2.end
+        const startDate =
+          appliedPeriod1.start < appliedPeriod2.start ? appliedPeriod1.start : appliedPeriod2.start
+        const endDate =
+          appliedPeriod1.end > appliedPeriod2.end ? appliedPeriod1.end : appliedPeriod2.end
         const res = await apiClient.getMemberRanking(org, 'commits', {
           start: startDate,
           end: endDate,
           limit: 1000,
+          ...(appliedSelectedRepos.length > 0 ? { repo: appliedSelectedRepos } : {}),
         })
         const data = res.data || res
         if (Array.isArray(data)) {
@@ -120,17 +196,75 @@ function Comparison({ org }: ComparisonProps) {
     if (org) {
       fetchMembers()
     }
-  }, [org, period1.start, period1.end, period2.start, period2.end])
+  }, [org, appliedPeriod1.start, appliedPeriod1.end, appliedPeriod2.start, appliedPeriod2.end, appliedSelectedRepos])
+
+  // リポジトリリストを取得（orgが変わったときのみ）
+  useEffect(() => {
+    if (!org) return
+    const fetchRepos = async () => {
+      try {
+        const res = await apiClient.getRepoRanking(org, 'commits', {
+          start: appliedPeriod1.start < appliedPeriod2.start ? appliedPeriod1.start : appliedPeriod2.start,
+          end: appliedPeriod1.end > appliedPeriod2.end ? appliedPeriod1.end : appliedPeriod2.end,
+          limit: 1000,
+        })
+        const data = res.data || res
+        if (Array.isArray(data)) {
+          const repos = data
+            .map((item: any) => item.Repo || item.repo || '')
+            .filter((r: string) => r !== '')
+          setAllRepos([...new Set(repos)])
+        }
+      } catch (err) {
+        console.error('Error fetching repositories:', err)
+      }
+    }
+    fetchRepos()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [org])
 
   const fetchComparisonData = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
-      // 組織全体のメトリクスを取得
-      const [metrics1Res, metrics2Res] = await Promise.all([
-        apiClient.getOrgMetrics(org, { start: period1.start, end: period1.end }),
-        apiClient.getOrgMetrics(org, { start: period2.start, end: period2.end }),
+      const repoParam = appliedSelectedRepos.length > 0 ? { repo: appliedSelectedRepos } : {}
+
+      // 組織全体のメトリクスと時系列データを取得
+      const [metrics1Res, metrics2Res, ts1Res, ts2Res] = await Promise.all([
+        apiClient.getOrgMetrics(org, { start: appliedPeriod1.start, end: appliedPeriod1.end, ...repoParam }),
+        apiClient.getOrgMetrics(org, { start: appliedPeriod2.start, end: appliedPeriod2.end, ...repoParam }),
+        apiClient.getDetailedTimeseries(org, { start: appliedPeriod1.start, end: appliedPeriod1.end, granularity: 'day', ...repoParam }),
+        apiClient.getDetailedTimeseries(org, { start: appliedPeriod2.start, end: appliedPeriod2.end, granularity: 'day', ...repoParam }),
       ])
+
+      const parseTimeseries = (raw: any): TimeseriesData[] => {
+        const data = raw.data || raw
+        const parsePoint = (item: any): TimeseriesData => {
+          const rawTs = item.timestamp || item.Timestamp || item.Date || item.date || item.period || item.Period || ''
+          let date = rawTs
+          try {
+            const d = new Date(rawTs)
+            if (!isNaN(d.getTime())) date = d.toISOString().split('T')[0]
+          } catch { /* keep raw */ }
+          return {
+            date,
+            period: date,
+            commits: item.Commits || item.commits || 0,
+            prs: item.PRs || item.Prs || item.prs || 0,
+            additions: item.Additions || item.additions || 0,
+            deletions: item.Deletions || item.deletions || 0,
+            deploys: item.Deploys || item.deploys || 0,
+          }
+        }
+        if (Array.isArray(data)) return data.map(parsePoint).filter((p) => p.date !== '')
+        if (data && typeof data === 'object') {
+          const points = data.DataPoints || data.dataPoints
+          if (Array.isArray(points)) return points.map(parsePoint).filter((p) => p.date !== '')
+        }
+        return []
+      }
+      setTimeseries1(parseTimeseries(ts1Res))
+      setTimeseries2(parseTimeseries(ts2Res))
 
       const metrics1Raw = metrics1Res.data || metrics1Res
       const metrics2Raw = metrics2Res.data || metrics2Res
@@ -161,18 +295,20 @@ function Comparison({ org }: ComparisonProps) {
       setOrgMetrics2(metrics2)
 
       // メンバー比較データを取得
-      if (selectedMembers.length > 0) {
+      if (appliedSelectedMembers.length > 0) {
         // 期間1と期間2の全メンバーランキングを一度に取得
         const [member1Res, member2Res] = await Promise.all([
           apiClient.getMemberRanking(org, 'commits', {
-            start: period1.start,
-            end: period1.end,
+            start: appliedPeriod1.start,
+            end: appliedPeriod1.end,
             limit: 1000,
+            ...repoParam,
           }),
           apiClient.getMemberRanking(org, 'commits', {
-            start: period2.start,
-            end: period2.end,
+            start: appliedPeriod2.start,
+            end: appliedPeriod2.end,
             limit: 1000,
+            ...repoParam,
           }),
         ])
 
@@ -202,7 +338,7 @@ function Comparison({ org }: ComparisonProps) {
         }
 
         // 選択されたメンバーごとに比較データを作成
-        const comparisons = selectedMembers.map((member) => {
+        const comparisons = appliedSelectedMembers.map((member) => {
           const member1 = members1Map.get(member)
           const member2 = members2Map.get(member)
 
@@ -261,7 +397,7 @@ function Comparison({ org }: ComparisonProps) {
     } finally {
       setLoading(false)
     }
-  }, [org, period1, period2, selectedMembers])
+  }, [org, appliedPeriod1, appliedPeriod2, appliedSelectedMembers, appliedSelectedRepos])
 
   useEffect(() => {
     if (org) {
@@ -299,6 +435,36 @@ function Comparison({ org }: ComparisonProps) {
       }
     : null
 
+  const chartData = useMemo(() => {
+    if (timeseries1.length === 0 && timeseries2.length === 0) return []
+    const maxLen = Math.max(timeseries1.length, timeseries2.length)
+    const data: { day: number; period1: number; period2: number; date1?: string; date2?: string }[] = []
+    for (let i = 0; i < maxLen; i++) {
+      const t1 = timeseries1[i]
+      const t2 = timeseries2[i]
+      const getValue = (t: TimeseriesData | undefined): number => {
+        if (!t) return 0
+        return (t as any)[chartMetric] || 0
+      }
+      data.push({
+        day: i + 1,
+        period1: getValue(t1),
+        period2: getValue(t2),
+        date1: t1?.date || t1?.period,
+        date2: t2?.date || t2?.period,
+      })
+    }
+    return data
+  }, [timeseries1, timeseries2, chartMetric])
+
+  const metricLabels: Record<keyof ComparisonMetrics, string> = {
+    commits: 'コミット',
+    prs: 'Pull Request',
+    additions: '追加行',
+    deletions: '削除行',
+    deploys: 'デプロイ',
+  }
+
   if (loading) {
     return (
       <div className="comparison-loading">
@@ -327,30 +493,33 @@ function Comparison({ org }: ComparisonProps) {
           <label>期間タイプ:</label>
           <select
             value={periodType}
-            onChange={(e) => setPeriodType(e.target.value as 'month' | 'week')}
+            onChange={(e) => setPeriodType(e.target.value as PeriodType)}
             className="type-select"
           >
             <option value="month">1ヶ月間</option>
             <option value="week">1週間</option>
+            <option value="custom">期間指定</option>
           </select>
         </div>
       </div>
 
       <div className="period-selectors">
-        <div className="days-selector">
-          <label>
-            日数:
-            <input
-              type="number"
-              min="1"
-              max="365"
-              value={days}
-              onChange={(e) => setDays(parseInt(e.target.value) || 1)}
-              className="days-input"
-            />
-          </label>
-          <span className="days-hint">（各期間の日数を指定）</span>
-        </div>
+        {periodType !== 'custom' && (
+          <div className="days-selector">
+            <label>
+              日数:
+              <input
+                type="number"
+                min="1"
+                max="365"
+                value={days}
+                onChange={(e) => setDays(parseInt(e.target.value) || 1)}
+                className="days-input"
+              />
+            </label>
+            <span className="days-hint">（各期間の日数を指定）</span>
+          </div>
+        )}
 
         <div className="period-selector">
           <h3>期間1</h3>
@@ -363,9 +532,20 @@ function Comparison({ org }: ComparisonProps) {
                 onChange={(e) => setPeriod1Start(e.target.value)}
               />
             </label>
-            <div className="period-info">
-              終了日: {period1.end}
-            </div>
+            {periodType === 'custom' ? (
+              <label>
+                終了日:
+                <input
+                  type="date"
+                  value={period1End}
+                  onChange={(e) => setPeriod1End(e.target.value)}
+                />
+              </label>
+            ) : (
+              <div className="period-info">
+                終了日: {period1.end}
+              </div>
+            )}
           </div>
         </div>
 
@@ -380,11 +560,31 @@ function Comparison({ org }: ComparisonProps) {
                 onChange={(e) => setPeriod2Start(e.target.value)}
               />
             </label>
-            <div className="period-info">
-              終了日: {period2.end}
-            </div>
+            {periodType === 'custom' ? (
+              <label>
+                終了日:
+                <input
+                  type="date"
+                  value={period2End}
+                  onChange={(e) => setPeriod2End(e.target.value)}
+                />
+              </label>
+            ) : (
+              <div className="period-info">
+                終了日: {period2.end}
+              </div>
+            )}
           </div>
         </div>
+      </div>
+
+      <div className="repo-filter-wrapper">
+        <h3>リポジトリフィルター（オプション）</h3>
+        <RepositoryFilter
+          repositories={allRepos}
+          selectedRepos={selectedRepos}
+          onChange={setSelectedRepos}
+        />
       </div>
 
       <div className="member-filter">
@@ -414,6 +614,19 @@ function Comparison({ org }: ComparisonProps) {
           >
             選択をクリア
           </button>
+        )}
+      </div>
+
+      <div className="compare-action">
+        <button
+          className="compare-btn"
+          onClick={applyFilters}
+          disabled={!hasPendingChanges || loading}
+        >
+          {loading ? '読み込み中...' : '比較'}
+        </button>
+        {hasPendingChanges && (
+          <span className="compare-hint">未適用の変更があります</span>
         )}
       </div>
 
@@ -469,6 +682,68 @@ function Comparison({ org }: ComparisonProps) {
             <p>データがありません</p>
           )}
         </div>
+
+        {chartData.length > 0 && (
+          <div className="comparison-chart-section">
+            <h2>時系列比較</h2>
+            <div className="chart-metric-selector">
+              <label>メトリクス:</label>
+              {(Object.keys(metricLabels) as (keyof ComparisonMetrics)[]).map((key) => (
+                <button
+                  key={key}
+                  className={`chart-metric-btn ${chartMetric === key ? 'active' : ''}`}
+                  onClick={() => setChartMetric(key)}
+                >
+                  {metricLabels[key]}
+                </button>
+              ))}
+            </div>
+            <ResponsiveContainer width="100%" height={350}>
+              <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis
+                  dataKey="day"
+                  tick={{ fontSize: 12 }}
+                  label={{ value: '経過日数', position: 'insideBottomRight', offset: -5, fontSize: 12 }}
+                />
+                <YAxis tick={{ fontSize: 12 }} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    border: '1px solid #ccc',
+                    borderRadius: '4px',
+                  }}
+                  formatter={(value: number, name: string) => [value.toLocaleString(), name]}
+                  labelFormatter={(day: number) => {
+                    const item = chartData[day - 1]
+                    if (!item) return `Day ${day}`
+                    const parts = [`Day ${day}`]
+                    if (item.date1) parts.push(`期間1: ${item.date1}`)
+                    if (item.date2) parts.push(`期間2: ${item.date2}`)
+                    return parts.join(' | ')
+                  }}
+                />
+                <Legend />
+                <Line
+                  type="monotone"
+                  dataKey="period1"
+                  stroke="#667eea"
+                  strokeWidth={2}
+                  dot={{ r: 3 }}
+                  name={`期間1 (${appliedPeriod1.start} 〜 ${appliedPeriod1.end})`}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="period2"
+                  stroke="#ed8936"
+                  strokeWidth={2}
+                  dot={{ r: 3 }}
+                  name={`期間2 (${appliedPeriod2.start} 〜 ${appliedPeriod2.end})`}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        )}
 
         {selectedMembers.length > 0 && (
           <div className="member-comparison">
